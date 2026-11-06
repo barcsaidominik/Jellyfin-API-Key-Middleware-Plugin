@@ -59,11 +59,12 @@ GET /System/Info/Public
 3. Open the rule builder, pick the key: what it called is pre-selected. Review the list (drop anything the application should not need), switch the mode to `enforce`, apply and save.
 4. Watch for denials: a denied request is logged as a Warning and shows up as *denied* in the builder and in the observed list.
 
-The observed requests are kept in memory only (cleared on restart, at most 2000 entries). The *Observed requests* section of the page shows them in rule format as well.
+The observed requests are kept in memory only (cleared on restart, at most 2000 entries; once full, new combinations are no longer recorded, but rules are still enforced). The *Observed requests* section of the page shows them in rule format as well.
 
 ## Known limitations
 
 - **Fail-open:** if the plugin is not loaded (disabled, wrong version, after a Jellyfin upgrade), the middleware is absent and every key has full access again. After upgrading Jellyfin, check that the plugin is Active.
+- **Unreadable configuration:** if Jellyfin cannot read the plugin's configuration file (e.g. broken XML after a manual edit), it replaces it with the factory default `[*] audit`, which gives every key full access. The plugin keeps a copy of the rules (updated at startup and on every save) in `Jellyfin.Plugin.ApiKeyMiddleware.rules.txt` next to that file and restores them at startup in this case, logging a Warning. If both files are lost, the factory default applies.
 - **Admin above the rules:** a key in `allow` or `audit` mode can rewrite the plugin's own settings. In enforce mode only the allowed endpoints are reachable, so the settings are not.
 - **One extra database lookup:** for requests with a token the middleware looks up the key as well; Jellyfin's auth handler does not reuse that result.
 - **Jellyfin version:** each release is built and tested against one Jellyfin version (the first three parts of the plugin version). Jellyfin may load it on a newer server, but that is untested: check that it is Active and that a disallowed call still gets 403.

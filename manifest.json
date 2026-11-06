@@ -8,6 +8,14 @@
     "category": "General",
     "versions": [
       {
+        "version": "12.4.0.1",
+        "changelog": "If Jellyfin resets the plugin configuration to the factory default because it cannot read it, the last saved rules are restored from a backup file next to the configuration (logged as a Warning). Docs: unreadable-configuration limitation, observed-list cap. CI actions pinned to commit SHAs.",
+        "targetAbi": "12.4.0.0",
+        "sourceUrl": "https://github.com/barcsaidominik/Jellyfin-API-Key-Middleware-Plugin/releases/download/v12.4.0.1/api-key-middleware_12.4.0.1.zip",
+        "checksum": "93f6417c087bd819dee20e548de37e35",
+        "timestamp": "2026-11-06T15:28:14Z"
+      },
+      {
         "version": "12.4.0.0",
         "changelog": "Built for Jellyfin 12.4.0; the plugin version now follows the Jellyfin version. Control characters are removed from logged path templates. Docs: security policy, uninstall/rollback, review note for pre-selected endpoints. License: GPL-3.0.",
         "targetAbi": "12.4.0.0",

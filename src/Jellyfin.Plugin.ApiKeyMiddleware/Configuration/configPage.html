@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>API Key Middleware</title>
+</head>
+<body>
+    <div id="ApiKeyMiddlewareConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select">
+        <style>
+            #ApiKeyMiddlewareConfigPage .akm-toolbar {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 1em;
+                align-items: flex-end;
+                margin-bottom: 1em;
+            }
+
+                #ApiKeyMiddlewareConfigPage .akm-toolbar > .selectContainer,
+                #ApiKeyMiddlewareConfigPage .akm-toolbar > .inputContainer {
+                    margin: 0;
+                    min-width: 12em;
+                    flex: 1 1 12em;
+                }
+
+            #ApiKeyMiddlewareConfigPage .akm-filters {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 1.5em;
+                margin-bottom: 1em;
+            }
+
+                #ApiKeyMiddlewareConfigPage .akm-filters label {
+                    cursor: pointer;
+                }
+
+            #ApiKeyMiddlewareConfigPage .akm-summary {
+                margin: 0.5em 0 1em;
+                opacity: 0.85;
+            }
+
+            #ApiKeyMiddlewareConfigPage .akm-groups {
+                max-height: 36em;
+                overflow-y: auto;
+                border: 1px solid rgba(128, 128, 128, 0.35);
+                border-radius: 0.3em;
+                padding: 0.3em 0.6em;
+            }
+
+            #ApiKeyMiddlewareConfigPage details {
+                border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+                padding: 0.25em 0;
+            }
+
+                #ApiKeyMiddlewareConfigPage details:last-child {
+                    border-bottom: none;
+                }
+
+            #ApiKeyMiddlewareConfigPage summary {
+                cursor: pointer;
+                padding: 0.3em 0;
+                font-weight: 600;
+            }
+
+                #ApiKeyMiddlewareConfigPage summary .akm-count {
+                    font-weight: normal;
+                    opacity: 0.7;
+                    margin-left: 0.5em;
+                }
+
+            #ApiKeyMiddlewareConfigPage .akm-row {
+                display: flex;
+                gap: 0.6em;
+                align-items: baseline;
+                padding: 0.2em 0 0.2em 1em;
+                cursor: pointer;
+            }
+
+                #ApiKeyMiddlewareConfigPage .akm-row input {
+                    flex: none;
+                    margin: 0;
+                    transform: translateY(0.1em);
+                }
+
+            #ApiKeyMiddlewareConfigPage .akm-rule {
+                font-family: monospace;
+                white-space: nowrap;
+            }
+
+            #ApiKeyMiddlewareConfigPage .akm-method {
+                display: inline-block;
+                min-width: 4.5em;
+                font-weight: 600;
+            }
+
+            #ApiKeyMiddlewareConfigPage .akm-desc {
+                opacity: 0.75;
+                font-size: 0.9em;
+            }
+
+            #ApiKeyMiddlewareConfigPage .akm-legacy {
+                opacity: 0.6;
+            }
+
+            #ApiKeyMiddlewareConfigPage .akm-badge {
+                display: inline-block;
+                font-size: 0.75em;
+                padding: 0.05em 0.45em;
+                border-radius: 0.8em;
+                margin-left: 0.4em;
+                white-space: nowrap;
+                vertical-align: 0.1em;
+            }
+
+            #ApiKeyMiddlewareConfigPage .akm-badge-admin {
+                background: rgba(220, 53, 69, 0.25);
+                color: #ff8a95;
+            }
+
+            #ApiKeyMiddlewareConfigPage .akm-badge-anon {
+                background: rgba(128, 128, 128, 0.25);
+            }
+
+            #ApiKeyMiddlewareConfigPage .akm-badge-legacy {
+                background: rgba(128, 128, 128, 0.25);
+            }
+
+            #ApiKeyMiddlewareConfigPage .akm-badge-seen {
+                background: rgba(0, 164, 220, 0.25);
+                color: #6fd0f5;
+            }
+
+            #ApiKeyMiddlewareConfigPage .akm-badge-denied {
+                background: rgba(255, 152, 0, 0.25);
+                color: #ffbf66;
+            }
+
+            #ApiKeyMiddlewareConfigPage .akm-warning {
+                color: #ffbf66;
+            }
+
+            #ApiKeyMiddlewareConfigPage .akm-text {
+                display: block;
+                width: 100%;
+                box-sizing: border-box;
+                font-family: monospace;
+                resize: vertical;
+            }
+
+            #ApiKeyMiddlewareConfigPage .akm-buttons {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.6em;
+                margin: 1em 0;
+            }
+
+                #ApiKeyMiddlewareConfigPage .akm-buttons .emby-button {
+                    margin: 0;
+                }
+        </style>
+        <div data-role="content">
+            <div class="content-primary">
+                <h2>Rule builder</h2>
+                <div class="fieldDescription" style="margin-bottom: 1em;">
+                    Pick an API key, tick the endpoints its application needs, then <b>Apply to rules</b> and <b>Save</b>.<br />
+                    Endpoints the key has called since the last restart (audit or enforce mode) are pre-selected and marked <i>seen</i>.<br />
+                    Every API key is a full administrator in Jellyfin, so keep each list as short as the application allows.
+                </div>
+                <div id="AkmBuilderError" class="akm-warning" style="display: none;"></div>
+                <div id="AkmBuilder">
+                    <div class="akm-toolbar">
+                        <div class="selectContainer">
+                            <select is="emby-select" id="AkmKey" label="API key"></select>
+                        </div>
+                        <div class="selectContainer">
+                            <select is="emby-select" id="AkmMode" label="Mode">
+                                <option value="enforce">enforce: only the selected endpoints</option>
+                                <option value="audit">audit: allow and record everything</option>
+                                <option value="allow">allow: no checks</option>
+                            </select>
+                        </div>
+                        <div class="inputContainer">
+                            <input is="emby-input" type="search" id="AkmSearch" label="Search (path, description, group)" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="akm-filters">
+                        <label><input type="checkbox" id="AkmSelectedOnly"> Selected only</label>
+                        <label><input type="checkbox" id="AkmHideLegacy"> Hide legacy routes</label>
+                        <label><input type="checkbox" id="AkmHideAdmin"> Hide admin-only endpoints</label>
+                    </div>
+                    <div id="AkmSummary" class="akm-summary"></div>
+                    <div id="AkmGroups" class="akm-groups"></div>
+                    <div class="inputContainer" style="margin-top: 1.5em;">
+                        <label class="textareaLabel" for="AkmCustom">Custom rules (kept as written)</label>
+                        <textarea id="AkmCustom" class="emby-textarea akm-text" rows="4"></textarea>
+                        <div class="fieldDescription">Lines of this key's section that do not correspond to a single endpoint above, e.g. <code>GET /Items/**</code>, or comments.</div>
+                    </div>
+                    <div class="akm-buttons">
+                        <button is="emby-button" type="button" id="AkmSelectObserved" class="raised emby-button"><span>Select seen</span></button>
+                        <button is="emby-button" type="button" id="AkmClear" class="raised emby-button"><span>Clear selection</span></button>
+                        <button is="emby-button" type="button" id="AkmReload" class="raised emby-button"><span>Reload from rules text</span></button>
+                        <button is="emby-button" type="button" id="AkmApply" class="raised button-submit emby-button"><span>Apply to rules</span></button>
+                    </div>
+                    <div id="AkmApplied" class="fieldDescription"></div>
+                </div>
+
+                <h2>Rules</h2>
+                <form id="ApiKeyMiddlewareConfigForm">
+                    <div class="inputContainer">
+                        <label class="textareaLabel" for="Rules">Rules</label>
+                        <textarea id="Rules" class="emby-textarea akm-text" rows="16"></textarea>
+                        <div class="fieldDescription">
+                            Section: <code>[key name] allow|audit|enforce</code> (<code>[*]</code> applies to keys without a section of their own).<br />
+                            Rule: <code>METHOD /path</code>, where <code>*</code> matches one segment and a trailing <code>**</code> matches the rest.<br />
+                            <code>allow</code>: no checks; <code>audit</code>: everything is allowed and recorded; <code>enforce</code>: only requests matching a rule get through, the rest get 403.<br />
+                            Invalid lines fail closed: a bad rule is dropped, an unknown mode becomes <code>enforce</code>. Only requests made with an API key are checked, user sessions are not.
+                        </div>
+                    </div>
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+
+                <h2>Rule errors</h2>
+                <pre id="RuleErrors"></pre>
+
+                <h2>Observed requests (since restart)</h2>
+                <div class="fieldDescription">Requests of keys in audit or enforce mode, in rule format with counts as comments. Can be pasted into the rules.</div>
+                <button is="emby-button" type="button" id="RefreshObserved" class="raised emby-button"><span>Refresh</span></button>
+                <pre id="Observed" style="white-space: pre-wrap;"></pre>
+            </div>
+        </div>
+        <script type="text/javascript">
+                        (function () {
+                            var pluginUniqueId = '05d59699-6b9e-41c1-a9d7-15a8b78865df';
+                            var page = document.querySelector('#ApiKeyMiddlewareConfigPage');
+                            var $ = function (selector) { return page.querySelector(selector); };
+
+                            var DEFAULT_SECTION = '*';
+                            var HEADER = /^\[([^\]]+)\]\s*(\S*)$/;
+                            var MODES = ['allow', 'audit', 'enforce'];
+
+                            // Builder state. rows: catalog entries with their DOM nodes; observed: last status snapshot.
+                            var catalog = null;
+                            var rows = [];
+                            var observed = [];
+
+                            // ---- rules text (mirrors ScopeRules.Parse: '#' starts a comment, names are case-insensitive) ----
+
+                            function stripComment(line) {
+                                var hash = line.indexOf('#');
+                                return (hash < 0 ? line : line.substring(0, hash)).trim();
+                            }
+
+                            function sameName(a, b) {
+                                return a.trim().toLowerCase() === b.trim().toLowerCase();
+                            }
+
+                            // Sections in text order: { name, mode, start, end } with end exclusive (line indexes).
+                            function parseSections(lines) {
+                                var sections = [];
+                                lines.forEach(function (line, i) {
+                                    var m = HEADER.exec(stripComment(line));
+                                    if (m) {
+                                        if (sections.length) { sections[sections.length - 1].end = i; }
+                                        sections.push({ name: m[1].trim(), mode: m[2].toLowerCase(), start: i, end: lines.length });
+                                    }
+                                });
+                                return sections;
+                            }
+
+                            // The server uses the last section when a name appears twice.
+                            function findSection(sections, name) {
+                                var found = null;
+                                sections.forEach(function (s) { if (sameName(s.name, name)) { found = s; } });
+                                return found;
+                            }
+
+                            function ruleKey(method, path) {
+                                return method.toUpperCase() + ' ' + path.toLowerCase();
+                            }
+
+                            function parseRule(text) {
+                                var parts = text.split(/\s+/);
+                                return parts.length === 2 ? { method: parts[0].toUpperCase(), path: parts[1] } : null;
+                            }
+
+                            // ---- observed request -> catalog row ----
+
+                            function segments(path) {
+                                return path.split('/').filter(function (s) { return s.length > 0; });
+                            }
+
+                            // An observed template has ids replaced by '*', which only a parameter ('*') can match.
+                            function ruleCovers(ruleSegments, observedSegments) {
+                                for (var i = 0; i < ruleSegments.length; i++) {
+                                    if (ruleSegments[i] === '**') { return observedSegments.length >= i; }
+                                    if (i >= observedSegments.length) { return false; }
+                                    if (ruleSegments[i] === '*') { continue; }
+                                    if (observedSegments[i] === '*' || ruleSegments[i].toLowerCase() !== observedSegments[i].toLowerCase()) { return false; }
+                                }
+                                return observedSegments.length === ruleSegments.length;
+                            }
+
+                            function specificity(ruleSegments) {
+                                return ruleSegments.reduce(function (score, s) { return score + (s === '**' ? 0 : s === '*' ? 1 : 2); }, 0);
+                            }
+
+                            // The most specific catalog row for an observed request (a GET rule also covers HEAD).
+                            function matchObserved(o) {
+                                var observedSegments = segments(o.Template);
+                                var best = null;
+                                rows.forEach(function (row) {
+                                    var methodOk = row.entry.Method === o.Method || (o.Method === 'HEAD' && row.entry.Method === 'GET');
+                                    if (methodOk && ruleCovers(row.segments, observedSegments)) {
+                                        if (!best || specificity(row.segments) > specificity(best.segments)) { best = row; }
+                                    }
+                                });
+                                return best;
+                            }
+
+                            // Observed requests that belong to the selected key. For [*] these are the keys without a section.
+                            function observedFor(name, sections) {
+                                return observed.filter(function (o) {
+                                    return name === DEFAULT_SECTION
+                                        ? !findSection(sections, o.KeyName)
+                                        : sameName(o.KeyName, name);
+                                });
+                            }
+
+                            // ---- rendering ----
+
+                            function badge(text, kind, title) {
+                                var span = document.createElement('span');
+                                span.className = 'akm-badge akm-badge-' + kind;
+                                span.textContent = text;
+                                if (title) { span.title = title; }
+                                return span;
+                            }
+
+                            function renderCatalog() {
+                                var container = $('#AkmGroups');
+                                container.textContent = '';
+                                rows = [];
+                                var groups = {};
+                                var order = [];
+                                catalog.Endpoints.forEach(function (entry) {
+                                    if (!groups[entry.Group]) {
+                                        var details = document.createElement('details');
+                                        var summary = document.createElement('summary');
+                                        var title = document.createElement('span');
+                                        title.textContent = entry.Group;
+                                        var count = document.createElement('span');
+                                        count.className = 'akm-count';
+                                        summary.appendChild(title);
+                                        summary.appendChild(count);
+                                        details.appendChild(summary);
+                                        container.appendChild(details);
+                                        groups[entry.Group] = { details: details, count: count, rows: [] };
+                                        order.push(entry.Group);
+                                    }
+
+                                    var label = document.createElement('label');
+                                    label.className = 'akm-row' + (entry.Hidden ? ' akm-legacy' : '');
+                                    var checkbox = document.createElement('input');
+                                    checkbox.type = 'checkbox';
+                                    checkbox.addEventListener('change', updateSummary);
+                                    var text = document.createElement('div');
+                                    var rule = document.createElement('div');
+                                    rule.className = 'akm-rule';
+                                    var method = document.createElement('span');
+                                    method.className = 'akm-method';
+                                    method.textContent = entry.Method;
+                                    rule.appendChild(method);
+                                    rule.appendChild(document.createTextNode(entry.Rule));
+                                    if (entry.Access === 'Admin') { rule.appendChild(badge('admin', 'admin', 'Admin-only endpoint (' + entry.Policies.join(', ') + ')')); }
+                                    if (entry.Access === 'Anonymous') { rule.appendChild(badge('public', 'anon', 'Callable without signing in')); }
+                                    if (entry.Hidden || entry.Obsolete) { rule.appendChild(badge('legacy', 'legacy', 'Hidden from the API documentation or marked obsolete; older clients may still call it')); }
+                                    var observedBadge = document.createElement('span');
+                                    rule.appendChild(observedBadge);
+                                    var desc = document.createElement('div');
+                                    desc.className = 'akm-desc';
+                                    desc.textContent = entry.Summary || '';
+                                    desc.title = entry.Templates.join('\n');
+                                    text.appendChild(rule);
+                                    text.appendChild(desc);
+                                    label.appendChild(checkbox);
+                                    label.appendChild(text);
+                                    groups[entry.Group].details.appendChild(label);
+
+                                    var row = {
+                                        entry: entry,
+                                        key: ruleKey(entry.Method, entry.Rule),
+                                        segments: segments(entry.Rule),
+                                        search: (entry.Method + ' ' + entry.Rule + ' ' + (entry.Summary || '') + ' ' + entry.Group).toLowerCase(),
+                                        label: label,
+                                        checkbox: checkbox,
+                                        observedBadge: observedBadge,
+                                        observed: null,
+                                        group: groups[entry.Group]
+                                    };
+                                    groups[entry.Group].rows.push(row);
+                                    rows.push(row);
+                                });
+                                rows.groups = order.map(function (g) { return groups[g]; });
+                            }
+
+                            function renderKeys(sections) {
+                                var select = $('#AkmKey');
+                                var previous = select.value;
+                                var names = catalog.KeyNames.slice();
+                                // Sections for keys that no longer exist are still editable.
+                                sections.forEach(function (s) {
+                                    if (s.name !== DEFAULT_SECTION && !names.some(function (n) { return sameName(n, s.name); })) { names.push(s.name); }
+                                });
+                                select.textContent = '';
+                                names.forEach(function (name) {
+                                    var option = document.createElement('option');
+                                    option.value = name;
+                                    var section = findSection(sections, name);
+                                    var exists = catalog.KeyNames.some(function (n) { return sameName(n, name); });
+                                    option.textContent = name + (section ? ' (' + (section.mode || 'enforce') + ')' : ' (no section)') + (exists ? '' : ' [no such key]');
+                                    select.appendChild(option);
+                                });
+                                var fallback = document.createElement('option');
+                                fallback.value = DEFAULT_SECTION;
+                                fallback.textContent = '* (keys without a section)';
+                                select.appendChild(fallback);
+                                if (previous && Array.prototype.some.call(select.options, function (o) { return o.value === previous; })) {
+                                    select.value = previous;
+                                }
+                            }
+
+                            // Loads the selected key's section from the rules text into the builder.
+                            function loadKey() {
+                                $('#AkmApplied').textContent = '';
+                                var name = $('#AkmKey').value;
+                                var lines = $('#Rules').value.split('\n');
+                                var sections = parseSections(lines);
+                                var section = findSection(sections, name);
+                                var selected = {};
+                                var custom = [];
+                                var hasRules = false;
+
+                                if (section) {
+                                    lines.slice(section.start + 1, section.end).forEach(function (line) {
+                                        var text = stripComment(line);
+                                        var rule = text ? parseRule(text) : null;
+                                        if (text) { hasRules = true; }
+                                        var key = rule ? ruleKey(rule.method, rule.path) : null;
+                                        if (key && rows.some(function (r) { return r.key === key; })) {
+                                            selected[key] = true;
+                                        } else if (line.trim()) {
+                                            custom.push(line.trim());
+                                        }
+                                    });
+                                }
+
+                                // Without a section the key gets the [*] section's mode, or audit.
+                                var fallback = name === DEFAULT_SECTION ? null : findSection(sections, DEFAULT_SECTION);
+                                var mode = section ? section.mode : fallback ? fallback.mode : 'audit';
+                                $('#AkmMode').value = MODES.indexOf(mode) >= 0 ? mode : 'enforce';
+
+                                rows.forEach(function (row) {
+                                    row.observed = null;
+                                    row.checkbox.checked = !!selected[row.key];
+                                    row.observedBadge.textContent = '';
+                                    row.observedBadge.className = '';
+                                });
+
+                                var unmatched = [];
+                                observedFor(name, sections).forEach(function (o) {
+                                    var row = matchObserved(o);
+                                    if (!row) {
+                                        unmatched.push(o.Method + ' ' + o.Template);
+                                        return;
+                                    }
+                                    var info = row.observed || { count: 0, denied: 0 };
+                                    info.count += o.Count;
+                                    info.denied += o.Denied;
+                                    row.observed = info;
+                                });
+
+                                rows.forEach(function (row) {
+                                    if (!row.observed) { return; }
+                                    var denied = row.observed.denied > 0;
+                                    row.observedBadge.className = 'akm-badge akm-badge-' + (denied ? 'denied' : 'seen');
+                                    row.observedBadge.textContent = 'seen ' + row.observed.count + '×' + (denied ? ', ' + row.observed.denied + ' denied' : '');
+                                    // Pre-select what the key used, unless its list has already been written.
+                                    if (!hasRules) { row.checkbox.checked = true; }
+                                });
+
+                                unmatched.forEach(function (rule) {
+                                    var exists = custom.some(function (c) { return stripComment(c).toUpperCase() === rule.toUpperCase(); });
+                                    if (!exists && !hasRules) { custom.push(rule + '   # seen, not in the endpoint list'); }
+                                });
+
+                                $('#AkmCustom').value = custom.join('\n');
+                                rows.groups.forEach(function (g) {
+                                    g.details.open = g.rows.some(function (r) { return r.checkbox.checked || r.observed; });
+                                });
+                                applyFilters();
+                            }
+
+                            function applyFilters() {
+                                var terms = $('#AkmSearch').value.toLowerCase().split(/\s+/).filter(Boolean);
+                                var selectedOnly = $('#AkmSelectedOnly').checked;
+                                var hideLegacy = $('#AkmHideLegacy').checked;
+                                var hideAdmin = $('#AkmHideAdmin').checked;
+                                rows.groups.forEach(function (g) {
+                                    var visible = 0;
+                                    g.rows.forEach(function (row) {
+                                        var show = terms.every(function (t) { return row.search.indexOf(t) >= 0; })
+                                            && (!selectedOnly || row.checkbox.checked)
+                                            && (!hideLegacy || !(row.entry.Hidden || row.entry.Obsolete) || row.checkbox.checked)
+                                            && (!hideAdmin || row.entry.Access !== 'Admin' || row.checkbox.checked);
+                                        row.label.style.display = show ? '' : 'none';
+                                        if (show) { visible++; }
+                                    });
+                                    g.details.style.display = visible ? '' : 'none';
+                                    if (terms.length && visible) { g.details.open = true; }
+                                });
+                                updateSummary();
+                            }
+
+                            function updateSummary() {
+                                var selected = rows.filter(function (r) { return r.checkbox.checked; });
+                                var admin = selected.filter(function (r) { return r.entry.Access === 'Admin'; }).length;
+                                var custom = $('#AkmCustom').value.split('\n').filter(function (l) { return stripComment(l); }).length;
+                                rows.groups.forEach(function (g) {
+                                    var n = g.rows.filter(function (r) { return r.checkbox.checked; }).length;
+                                    g.count.textContent = (n ? n + ' of ' : '') + g.rows.length;
+                                });
+
+                                var summary = $('#AkmSummary');
+                                summary.textContent = selected.length + ' endpoint(s) selected, ' + custom + ' custom rule(s).';
+                                if (admin) {
+                                    var warning = document.createElement('span');
+                                    warning.className = 'akm-warning';
+                                    warning.textContent = ' ' + admin + ' admin-only endpoint(s) selected: a leaked key could use them.';
+                                    summary.appendChild(warning);
+                                }
+                                if ($('#AkmMode').value === 'enforce' && !selected.length && !custom) {
+                                    var empty = document.createElement('span');
+                                    empty.className = 'akm-warning';
+                                    empty.textContent = ' Enforce mode with no rules denies every request of this key.';
+                                    summary.appendChild(empty);
+                                }
+                            }
+
+                            // Writes the builder's state back as the key's section, leaving the other sections untouched.
+                            function applyToRules() {
+                                var name = $('#AkmKey').value;
+                                if (/[\]#\r\n]/.test(name)) {
+                                    $('#AkmApplied').textContent = 'This key name contains a character the rules format cannot express (] or #). Rename the key.';
+                                    return;
+                                }
+
+                                var width = 0;
+                                var selected = rows.filter(function (r) { return r.checkbox.checked; });
+                                selected.forEach(function (r) { width = Math.max(width, r.entry.Method.length + 1 + r.entry.Rule.length); });
+                                var block = ['[' + name + '] ' + $('#AkmMode').value];
+                                selected.forEach(function (r) {
+                                    var rule = r.entry.Method + ' ' + r.entry.Rule;
+                                    block.push(r.entry.Summary ? rule + ' '.repeat(width - rule.length + 3) + '# ' + r.entry.Summary : rule);
+                                });
+                                $('#AkmCustom').value.split('\n').forEach(function (line) {
+                                    if (line.trim()) { block.push(line.trim()); }
+                                });
+
+                                var lines = $('#Rules').value.split('\n');
+                                var section = findSection(parseSections(lines), name);
+                                if (section) {
+                                    // Keep the blank line that separates this section from the next one.
+                                    var end = section.end;
+                                    while (end > section.start + 1 && !lines[end - 1].trim()) { end--; }
+                                    lines.splice.apply(lines, [section.start, end - section.start].concat(block));
+                                } else {
+                                    while (lines.length && !lines[lines.length - 1].trim()) { lines.pop(); }
+                                    if (lines.length) { lines.push(''); }
+                                    lines = lines.concat(block);
+                                }
+
+                                while (lines.length && !lines[lines.length - 1].trim()) { lines.pop(); }
+                                $('#Rules').value = lines.join('\n') + '\n';
+                                renderKeys(parseSections(lines));
+                                $('#AkmApplied').textContent = 'Section [' + name + '] updated in the rules below. Click Save to activate it.';
+                            }
+
+                            // ---- loading ----
+
+                            function loadStatus() {
+                                return ApiClient.getJSON(ApiClient.getUrl('ApiKeyMiddleware/Status')).then(function (status) {
+                                    observed = status.Observed;
+                                    $('#RuleErrors').textContent = status.Errors.length ? status.Errors.join('\n') : 'None.';
+
+                                    var lines = [];
+                                    var lastKey = null;
+                                    status.Observed.forEach(function (o) {
+                                        if (o.KeyName !== lastKey) {
+                                            if (lastKey !== null) { lines.push(''); }
+                                            lines.push('[' + o.KeyName + ']');
+                                            lastKey = o.KeyName;
+                                        }
+                                        var note = o.Count + ' request(s)' + (o.Denied ? ', ' + o.Denied + ' denied' : '')
+                                            + ', last ' + new Date(o.LastSeen).toLocaleString();
+                                        lines.push(o.Method + ' ' + o.Template + '   # ' + note);
+                                    });
+                                    $('#Observed').textContent = lines.length ? lines.join('\n') : 'No requests observed yet.';
+                                });
+                            }
+
+                            function loadCatalog() {
+                                return ApiClient.getJSON(ApiClient.getUrl('ApiKeyMiddleware/Catalog')).then(function (result) {
+                                    catalog = result;
+                                    renderCatalog();
+                                }, function () {
+                                    catalog = null;
+                                    $('#AkmBuilder').style.display = 'none';
+                                    $('#AkmBuilderError').style.display = '';
+                                    $('#AkmBuilderError').textContent = 'The endpoint list could not be loaded. The rules can still be edited as text below.';
+                                });
+                            }
+
+                            function refreshBuilder() {
+                                if (!catalog) { return; }
+                                renderKeys(parseSections($('#Rules').value.split('\n')));
+                                loadKey();
+                            }
+
+                            page.addEventListener('pageshow', function () {
+                                Dashboard.showLoadingMsg();
+                                ApiClient.getPluginConfiguration(pluginUniqueId).then(function (config) {
+                                    $('#Rules').value = config.Rules || '';
+                                    return Promise.all([loadStatus(), catalog ? null : loadCatalog()]);
+                                }).then(refreshBuilder).then(function () {
+                                    Dashboard.hideLoadingMsg();
+                                }, function () {
+                                    Dashboard.hideLoadingMsg();
+                                });
+                            });
+
+                            $('#AkmKey').addEventListener('change', loadKey);
+                            $('#AkmMode').addEventListener('change', updateSummary);
+                            $('#AkmSearch').addEventListener('input', applyFilters);
+                            $('#AkmSelectedOnly').addEventListener('change', applyFilters);
+                            $('#AkmHideLegacy').addEventListener('change', applyFilters);
+                            $('#AkmHideAdmin').addEventListener('change', applyFilters);
+                            $('#AkmCustom').addEventListener('input', updateSummary);
+                            $('#AkmReload').addEventListener('click', loadKey);
+                            $('#AkmApply').addEventListener('click', applyToRules);
+                            $('#AkmClear').addEventListener('click', function () {
+                                rows.forEach(function (r) { r.checkbox.checked = false; });
+                                applyFilters();
+                            });
+                            $('#AkmSelectObserved').addEventListener('click', function () {
+                                rows.forEach(function (r) { if (r.observed) { r.checkbox.checked = true; } });
+                                applyFilters();
+                            });
+
+                            $('#RefreshObserved').addEventListener('click', function () {
+                                loadStatus().then(function () {
+                                    if (!catalog) { return; }
+                                    // Keep the unapplied builder state; only refresh the "seen" badges.
+                                    var checked = rows.filter(function (r) { return r.checkbox.checked; });
+                                    var mode = $('#AkmMode').value;
+                                    var custom = $('#AkmCustom').value;
+                                    loadKey();
+                                    checked.forEach(function (r) { r.checkbox.checked = true; });
+                                    $('#AkmMode').value = mode;
+                                    $('#AkmCustom').value = custom;
+                                    applyFilters();
+                                });
+                            });
+
+                            $('#ApiKeyMiddlewareConfigForm').addEventListener('submit', function (e) {
+                                Dashboard.showLoadingMsg();
+                                ApiClient.getPluginConfiguration(pluginUniqueId).then(function (config) {
+                                    config.Rules = $('#Rules').value;
+                                    ApiClient.updatePluginConfiguration(pluginUniqueId, config).then(function (result) {
+                                        Dashboard.processPluginConfigurationUpdateResult(result);
+                                        loadStatus().then(refreshBuilder);
+                                    });
+                                });
+                                e.preventDefault();
+                                return false;
+                            });
+                        })();
+        </script>
+    </div>
+</body>
+</html>

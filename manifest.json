@@ -1,0 +1,20 @@
+[
+  {
+    "guid": "05d59699-6b9e-41c1-a9d7-15a8b78865df",
+    "name": "API Key Middleware",
+    "description": "Per-API-key endpoint allowlist (HTTP method + path) for the Jellyfin API.",
+    "overview": "Limits what each API key can call, with a point-and-click rule builder.",
+    "owner": "barcsaidominik",
+    "category": "General",
+    "versions": [
+      {
+        "version": "12.4.0.0",
+        "changelog": "Built for Jellyfin 12.4.0; the plugin version now follows the Jellyfin version. Control characters are removed from logged path templates. Docs: security policy, uninstall/rollback, review note for pre-selected endpoints. License: GPL-3.0.",
+        "targetAbi": "12.4.0.0",
+        "sourceUrl": "https://github.com/barcsaidominik/Jellyfin-API-Key-Middleware-Plugin/releases/download/v12.4.0.0/api-key-middleware_12.4.0.0.zip",
+        "checksum": "5a1c8ed30fbefab03befdc09db77a6c1",
+        "timestamp": "2026-11-06T14:33:52Z"
+      }
+    ]
+  }
+]

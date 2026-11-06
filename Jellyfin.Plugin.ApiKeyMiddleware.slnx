@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Jellyfin.Plugin.ApiKeyMiddleware/Jellyfin.Plugin.ApiKeyMiddleware.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Jellyfin.Plugin.ApiKeyMiddleware.Tests/Jellyfin.Plugin.ApiKeyMiddleware.Tests.csproj" />
+  </Folder>
+</Solution>

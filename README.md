@@ -4,6 +4,8 @@ A Jellyfin plugin that adds a per-API-key allowlist (HTTP method + path). In Jel
 
 Early release: built and tested against Jellyfin **12.4.0**. It narrows what API keys can do; it is not a replacement for Jellyfin's own authentication, keeping Jellyfin up to date, a firewall or a VPN. Feedback, especially on bypasses and route edge cases, is welcome (see [SECURITY.md](SECURITY.md)).
 
+**AI disclosure:** this plugin was developed primarily with an LLM (Claude, via Claude Code): most of the code, tests, documentation and the security review were written with it. The maintainer directed the work, reviewed the changes and tested every release on a live Jellyfin server. See Jellyfin's [LLM policies](https://jellyfin.org/docs/general/contributing/llm-policies/).
+
 ## How it works
 
 - The plugin registers an `IStartupFilter` that puts a middleware at the **front** of Jellyfin's request pipeline (before authentication and routing). Plugin services are added to the host's own DI container before the web host is built (Jellyfin 12.4: `Program.cs` → `ApplicationHost.Init` → `RegisterServices`).

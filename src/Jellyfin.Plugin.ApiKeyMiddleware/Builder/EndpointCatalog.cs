@@ -1,3 +1,4 @@
+using Jellyfin.Plugin.ApiKeyMiddleware.Scoping;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -27,7 +28,12 @@ public sealed record CatalogEndpoint(
     EndpointAccess Access,
     IReadOnlyList<string> Policies,
     bool Hidden,
-    bool Obsolete);
+    bool Obsolete)
+{
+    // Rules of other endpoints (same method) this rule matches as well, because "*" also matches
+    // literal segments: "POST /Users/*" also allows "POST /Users/New".
+    public IReadOnlyList<string> AlsoMatches { get; init; } = [];
+}
 
 // Every route the server serves (from routing, so including the ones hidden from the OpenAPI
 // document, e.g. legacy /Users/{userId}/... routes), translated to the rule syntax.
@@ -85,8 +91,7 @@ public static class EndpointCatalog
 
         // A GET rule also covers HEAD, so a HEAD line next to the same GET line adds nothing.
         var gets = merged.Where(r => r.Method == "GET").Select(r => r.Rule).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        return merged
-            .Where(r => r.Method != "HEAD" || !gets.Contains(r.Rule))
+        return WithOverlaps(merged.Where(r => r.Method != "HEAD" || !gets.Contains(r.Rule)).ToList())
             .OrderBy(r => r.Group, StringComparer.OrdinalIgnoreCase)
             .ThenBy(r => r.Rule, StringComparer.OrdinalIgnoreCase)
             .ThenBy(r => r.Method, StringComparer.Ordinal)
@@ -128,6 +133,31 @@ public static class EndpointCatalog
     }
 
     private static string Join(IEnumerable<string> segments) => "/" + string.Join('/', segments);
+
+    // For each rule with a wildcard: the other rules of the same method it matches, using the same
+    // matcher the middleware uses. A "*" in the other rule is a parameter, so only a wildcard here
+    // matches it; a literal here never matches the other rule's "*".
+    private static IEnumerable<CatalogEndpoint> WithOverlaps(List<CatalogEndpoint> rows)
+    {
+        var byMethod = rows.ToLookup(r => r.Method, StringComparer.Ordinal);
+        foreach (var row in rows)
+        {
+            if (!row.Rule.Contains('*', StringComparison.Ordinal)
+                || !RulePattern.TryParse(row.Method + " " + row.Rule, out var pattern, out _))
+            {
+                yield return row;
+                continue;
+            }
+
+            var overlaps = byMethod[row.Method]
+                .Where(other => !string.Equals(other.Rule, row.Rule, StringComparison.OrdinalIgnoreCase)
+                    && pattern.Matches(other.Method, RequestPath.Split(other.Rule)))
+                .Select(other => other.Rule)
+                .Order(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            yield return overlaps.Length == 0 ? row : row with { AlsoMatches = overlaps };
+        }
+    }
 
     // Several routes can end up as the same rule. The merged line shows the strictest access level,
     // so a warning is never lost, and counts as hidden/obsolete only if all of them are.

@@ -20,4 +20,5 @@ Out of scope, by design (see the README's *Known limitations*):
 
 - **Fail-open:** when the plugin is not loaded (disabled, incompatible Jellyfin version, startup failure), API keys have Jellyfin's normal full access.
 - Keys in `allow` or `audit` mode are still full administrators.
+- The other known limitations in the README: messages on a WebSocket the key may open (`GET /socket`), and a `*` segment matching literal sibling routes (e.g. `POST /Users/*` → `POST /Users/New`). A WebSocket opened on any other path, or a way around these checks, is in scope.
 - User sessions and anonymous requests are not affected; the plugin is not a replacement for Jellyfin's own authentication, keeping Jellyfin up to date, a firewall or a VPN.

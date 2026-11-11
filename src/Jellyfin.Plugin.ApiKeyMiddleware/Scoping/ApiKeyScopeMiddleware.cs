@@ -2,6 +2,7 @@ using MediaBrowser.Controller.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.ApiKeyMiddleware.Scoping;
@@ -58,7 +59,23 @@ internal sealed class ApiKeyScopeMiddleware
         // For API keys Jellyfin sets Client to the key's name (AuthorizationContext), whatever the caller sent.
         var keyName = auth.Client ?? string.Empty;
         var method = context.Request.Method;
+
+        // Jellyfin's WebSocketHandlerMiddleware accepts an upgrade on any path, and the messages on the
+        // socket are not HTTP requests. So in enforce mode an upgrade is only allowed on Jellyfin's own
+        // WebSocket path (/socket), and only if a GET rule allows that path. HTTP/2 upgrades arrive as
+        // CONNECT and are matched like GET.
+        var webSocket = IsWebSocketRequest(context);
+        if (webSocket)
+        {
+            method = HttpMethods.Get;
+        }
+
         var decision = _rules.Get(rulesText).Decide(keyName, method, path);
+        if (webSocket && decision == ScopeDecision.Allowed && !IsWebSocketPath(path))
+        {
+            decision = ScopeDecision.Denied;
+            method = WebSocketMethodLabel;
+        }
         if (decision == ScopeDecision.Pass)
         {
             await _next(context).ConfigureAwait(false);
@@ -87,4 +104,32 @@ internal sealed class ApiKeyScopeMiddleware
 
         await _next(context).ConfigureAwait(false);
     }
+
+    // Label in the log and the observed list for an upgrade denied because of its path.
+    internal const string WebSocketMethodLabel = "WEBSOCKET";
+
+    private const string WebSocketPath = "socket";
+
+    // Deliberately broader than ASP.NET Core's own check (WebSocketMiddleware), so nothing it would
+    // accept as a WebSocket request is treated as a plain request here.
+    internal static bool IsWebSocketRequest(HttpContext context)
+    {
+        if (context.Features.Get<IHttpExtendedConnectFeature>()?.IsExtendedConnect == true)
+        {
+            return true;
+        }
+
+        foreach (var value in context.Request.Headers.Upgrade)
+        {
+            if (value is not null && value.Contains("websocket", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsWebSocketPath(string[] path)
+        => path.Length == 1 && string.Equals(path[0], WebSocketPath, StringComparison.OrdinalIgnoreCase);
 }

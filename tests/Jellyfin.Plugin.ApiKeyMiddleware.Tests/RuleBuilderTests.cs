@@ -55,6 +55,22 @@ public class EndpointCatalogTests
     }
 
     [Fact]
+    public void AlsoMatches_ListsLiteralSiblingsOfWildcardRules()
+    {
+        var rows = Build(
+            Route("Users/{userId}", ["POST"], new AuthorizeAttribute()),
+            Route("Users/New", ["POST"], new AuthorizeAttribute { Policy = "RequiresElevation" }),
+            Route("Users/Configuration", ["POST"], new AuthorizeAttribute()),
+            Route("Users/{userId}/Policy", ["POST"], new AuthorizeAttribute { Policy = "RequiresElevation" }),
+            Route("Users/Me", ["GET"], new AuthorizeAttribute()));
+
+        Assert.Equal(["/Users/Configuration", "/Users/New"], rows.Single(r => r.Rule == "/Users/*").AlsoMatches);
+        Assert.Empty(rows.Single(r => r.Rule == "/Users/New").AlsoMatches); // a literal does not match "*"
+        Assert.Empty(rows.Single(r => r.Rule == "/Users/*/Policy").AlsoMatches);
+        Assert.Empty(rows.Single(r => r.Rule == "/Users/Me").AlsoMatches); // other method
+    }
+
+    [Fact]
     public void HiddenAndObsolete_AreFlagged()
     {
         var row = Build(Route("Users/{userId}/Items/Latest", ["GET"], new AuthorizeAttribute(), new ApiExplorerSettingsAttribute { IgnoreApi = true }, new ObsoleteAttribute())).Single();

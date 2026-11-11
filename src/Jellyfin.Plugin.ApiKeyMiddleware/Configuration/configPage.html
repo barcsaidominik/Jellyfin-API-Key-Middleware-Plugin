@@ -377,6 +377,10 @@
                                     if (entry.Access === 'Admin') { rule.appendChild(badge('admin', 'admin', 'Admin-only endpoint (' + entry.Policies.join(', ') + ')')); }
                                     if (entry.Access === 'Anonymous') { rule.appendChild(badge('public', 'anon', 'Callable without signing in')); }
                                     if (entry.Hidden || entry.Obsolete) { rule.appendChild(badge('legacy', 'legacy', 'Hidden from the API documentation or marked obsolete; older clients may still call it')); }
+                                    // Filled in once all rows exist (see adminAlsoMatched).
+                                    var widerBadge = badge('also matches admin', 'admin');
+                                    widerBadge.style.display = 'none';
+                                    rule.appendChild(widerBadge);
                                     var observedBadge = document.createElement('span');
                                     rule.appendChild(observedBadge);
                                     var desc = document.createElement('div');
@@ -397,6 +401,7 @@
                                         label: label,
                                         checkbox: checkbox,
                                         observedBadge: observedBadge,
+                                        widerBadge: widerBadge,
                                         observed: null,
                                         group: groups[entry.Group]
                                     };
@@ -404,6 +409,22 @@
                                     rows.push(row);
                                 });
                                 rows.groups = order.map(function (g) { return groups[g]; });
+                                rows.byKey = {};
+                                rows.forEach(function (row) { rows.byKey[row.key] = row; });
+                                rows.forEach(function (row) {
+                                    var admin = adminAlsoMatched(row);
+                                    if (admin.length) {
+                                        row.widerBadge.title = 'Because * matches any segment, this rule also allows:\n' + admin.map(function (r) { return r.entry.Method + ' ' + r.entry.Rule; }).join('\n');
+                                        row.widerBadge.style.display = '';
+                                    }
+                                });
+                            }
+
+                            // Admin-only endpoints a rule with '*' reaches besides its own route.
+                            function adminAlsoMatched(row) {
+                                return (row.entry.AlsoMatches || [])
+                                    .map(function (rule) { return rows.byKey[ruleKey(row.entry.Method, rule)]; })
+                                    .filter(function (other) { return other && other.entry.Access === 'Admin'; });
                             }
 
                             function renderKeys(sections) {
@@ -492,6 +513,8 @@
                                 });
 
                                 unmatched.forEach(function (rule) {
+                                    // A WebSocket upgrade denied because of its path is not a rule to suggest.
+                                    if (rule.indexOf('WEBSOCKET ') === 0) { return; }
                                     var exists = custom.some(function (c) { return stripComment(c).toUpperCase() === rule.toUpperCase(); });
                                     if (!exists && !hasRules) { custom.push(rule + '   # seen, not in the endpoint list'); }
                                 });
@@ -540,6 +563,21 @@
                                     warning.className = 'akm-warning';
                                     warning.textContent = ' ' + admin + ' admin-only endpoint(s) selected: a leaked key could use them.';
                                     summary.appendChild(warning);
+                                }
+                                var reached = {};
+                                selected.forEach(function (r) {
+                                    adminAlsoMatched(r).forEach(function (other) {
+                                        if (!other.checkbox.checked) { reached[other.key] = other.entry.Method + ' ' + other.entry.Rule; }
+                                    });
+                                });
+                                var reachedRules = Object.keys(reached).map(function (k) { return reached[k]; }).sort();
+                                if (reachedRules.length) {
+                                    var wider = document.createElement('span');
+                                    wider.className = 'akm-warning';
+                                    wider.textContent = ' Selected rules with * also allow ' + reachedRules.length + ' admin-only endpoint(s) that are not ticked: '
+                                        + reachedRules.slice(0, 5).join(', ') + (reachedRules.length > 5 ? ', …' : '')
+                                        + '. Rules cannot exclude paths: drop the * rule if the key must not reach them.';
+                                    summary.appendChild(wider);
                                 }
                                 if ($('#AkmMode').value === 'enforce' && !selected.length && !custom) {
                                     var empty = document.createElement('span');

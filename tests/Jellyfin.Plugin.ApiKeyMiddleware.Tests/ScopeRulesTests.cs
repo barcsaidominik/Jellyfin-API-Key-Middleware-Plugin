@@ -132,6 +132,26 @@ public class ScopeRulesTests
     [InlineData("GET", "/", ScopeDecision.Denied)]
     public void PathEdgeCases(string method, string path, ScopeDecision expected)
         => Assert.Equal(expected, ScopeRules.Parse(Sample).Decide("homepage", method, P(path)));
+
+    // Methods outside the rule syntax (WebDAV, TRACE, HTTP/2 extended CONNECT) only match a "*" rule.
+    [Theory]
+    [InlineData("CONNECT", "GET /Sessions", ScopeDecision.Denied)]
+    [InlineData("PROPFIND", "GET /Sessions", ScopeDecision.Denied)]
+    [InlineData("TRACE", "GET /Sessions", ScopeDecision.Denied)]
+    [InlineData("CONNECT", "* /Sessions", ScopeDecision.Allowed)]
+    public void UnlistedMethods_OnlyMatchAnyMethodRule(string method, string rule, ScopeDecision expected)
+        => Assert.Equal(expected, ScopeRules.Parse("[k] enforce\n" + rule).Decide("k", method, P("/Sessions")));
+
+    // Known limitation (documented in the README): "*" matches any segment, including the literal
+    // segments of sibling routes. ASP.NET Core routing prefers the literal route, so a rule built from
+    // POST /Users/{userId} also reaches POST /Users/New (create user, admin-only).
+    [Theory]
+    [InlineData("POST /Users/*", "POST", "/Users/New")]
+    [InlineData("POST /Users/*", "POST", "/Users/Configuration")]
+    [InlineData("GET /Users/*", "GET", "/Users/Me")]
+    [InlineData("GET /Items/*", "GET", "/Items/Counts")]
+    public void KnownLimitation_WildcardSegmentAlsoMatchesLiteralSiblingRoutes(string rule, string method, string path)
+        => Assert.Equal(ScopeDecision.Allowed, ScopeRules.Parse("[k] enforce\n" + rule).Decide("k", method, P(path)));
 }
 
 public class RequestPathTests

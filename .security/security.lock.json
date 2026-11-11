@@ -3,11 +3,11 @@
   "toolkitRelease": {
     "baseUrl": "https://github.com/barcsaidominik/SecurityToolkit/releases/download",
     "sha256": {
-      "linux-arm64": "722d8d7c1bee3457a866cdf3e37023b65c01e7c8b682de385b3b24ef7b4d961f",
-      "linux-x64": "3d0728d8647a2f1f20e3e474d23409808a4b6dc9594c7312373f3b98f5f0bde6",
-      "win-x64": "4fee582131f63e0bdb93e8e6b8a45fa0819547636ece393b20cf032e23460057"
+      "linux-arm64": "c3ca3881df2ea6debdd1271fa75407f1cc91a5f30456252583ad9568a1780d2d",
+      "linux-x64": "dc481d2fa18f6d472908ccc72048165e8c4a73df28394a3b3dc5753debecc39d",
+      "win-x64": "a81999d0894dc5a3f8e31a98a10363c33e5a7fdca6551acd1fa012ba6e51ff0d"
     },
-    "version": "0.1.2"
+    "version": "0.1.3"
   },
   "tools": {
     "devskim": {

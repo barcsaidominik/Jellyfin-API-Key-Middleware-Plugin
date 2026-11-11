@@ -3,8 +3,7 @@
   "azureVmImage": "",
   "devskim": {
     "ignoreGlobs": [
-      "**/manifest.json",
-      "**/.github/workflows/security-toolkit.yml"
+      "**/manifest.json"
     ],
     "ignoreRuleIds": [
       "DS162092"
@@ -58,7 +57,7 @@
   },
   "toolkitRelease": {
     "baseUrl": "https://github.com/barcsaidominik/SecurityToolkit/releases/download",
-    "version": "0.1.2"
+    "version": "0.1.3"
   },
   "tools": {
     "analyzers": true,

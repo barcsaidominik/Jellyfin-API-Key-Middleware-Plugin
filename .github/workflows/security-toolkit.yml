@@ -12,31 +12,31 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Install security-toolkit 0.1.2 (Linux)
+      - name: Install security-toolkit 0.1.3 (Linux)
         if: runner.os == 'Linux'
         shell: bash
         run: |
           set -euo pipefail
           case "$(uname -m)" in
-            x86_64) rid=linux-x64; sum=3d0728d8647a2f1f20e3e474d23409808a4b6dc9594c7312373f3b98f5f0bde6 ;;
-            aarch64|arm64) rid=linux-arm64; sum=722d8d7c1bee3457a866cdf3e37023b65c01e7c8b682de385b3b24ef7b4d961f ;;
+            x86_64) rid=linux-x64; sum=dc481d2fa18f6d472908ccc72048165e8c4a73df28394a3b3dc5753debecc39d ;;
+            aarch64|arm64) rid=linux-arm64; sum=c3ca3881df2ea6debdd1271fa75407f1cc91a5f30456252583ad9568a1780d2d ;;
             *) echo "security-toolkit: unsupported architecture $(uname -m)" >&2; exit 2 ;;
           esac
           dir="${{ runner.temp }}/security-toolkit-bin"
           mkdir -p "$dir"
-          curl -fsSL --retry 3 -o "$dir/security-toolkit" "https://github.com/barcsaidominik/SecurityToolkit/releases/download/v0.1.2/security-toolkit-$rid"
+          curl -fsSL --retry 3 -o "$dir/security-toolkit" "https://github.com/barcsaidominik/SecurityToolkit/releases/download/v0.1.3/security-toolkit-$rid"
           echo "$sum  $dir/security-toolkit" | sha256sum -c --quiet -
           chmod +x "$dir/security-toolkit"
           echo "$dir" >> "$GITHUB_PATH"
 
-      - name: Install security-toolkit 0.1.2 (Windows)
+      - name: Install security-toolkit 0.1.3 (Windows)
         if: runner.os == 'Windows'
         shell: cmd
         run: |
           set "dir=${{ runner.temp }}\security-toolkit-bin"
           if not exist "%dir%" mkdir "%dir%" || exit /b 2
-          curl.exe -fsSL --retry 3 -o "%dir%\security-toolkit.exe" "https://github.com/barcsaidominik/SecurityToolkit/releases/download/v0.1.2/security-toolkit-win-x64.exe" || exit /b 2
-          certutil -hashfile "%dir%\security-toolkit.exe" SHA256 | findstr /i /x "4fee582131f63e0bdb93e8e6b8a45fa0819547636ece393b20cf032e23460057" >nul || (echo security-toolkit: checksum mismatch & exit /b 2)
+          curl.exe -fsSL --retry 3 -o "%dir%\security-toolkit.exe" "https://github.com/barcsaidominik/SecurityToolkit/releases/download/v0.1.3/security-toolkit-win-x64.exe" || exit /b 2
+          certutil -hashfile "%dir%\security-toolkit.exe" SHA256 | findstr /i /x "a81999d0894dc5a3f8e31a98a10363c33e5a7fdca6551acd1fa012ba6e51ff0d" >nul || (echo security-toolkit: checksum mismatch & exit /b 2)
           >>"%GITHUB_PATH%" echo %dir%
 
       - name: Initialize pinned security tools

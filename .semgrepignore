@@ -1,0 +1,8 @@
+# BEGIN SECURITY-TOOLKIT
+**/bin/**
+**/obj/**
+**/node_modules/**
+**/dist/**
+**/coverage/**
+.security/**
+# END SECURITY-TOOLKIT

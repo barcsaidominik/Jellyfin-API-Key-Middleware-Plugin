@@ -70,12 +70,17 @@ internal sealed class ApiKeyScopeMiddleware
         var isNew = _observed.Record(keyName, method, template, denied);
         if (denied)
         {
-            _logger.Log(isNew ? LogLevel.Warning : LogLevel.Debug, "API key {KeyName} denied: {Method} {Template}", keyName, method, template);
+            var level = isNew ? LogLevel.Warning : LogLevel.Debug;
+            if (_logger.IsEnabled(level))
+            {
+                _logger.Log(level, "API key {KeyName} denied: {Method} {Template}", keyName, method, template);
+            }
+
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
             return;
         }
 
-        if (isNew)
+        if (isNew && _logger.IsEnabled(LogLevel.Information))
         {
             _logger.LogInformation("API key {KeyName} {Decision}: {Method} {Template}", keyName, decision, method, template);
         }

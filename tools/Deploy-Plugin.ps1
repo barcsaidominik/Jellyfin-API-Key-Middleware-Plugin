@@ -44,7 +44,7 @@ $session = New-PSSession -ComputerName $Server
 try {
     # The loaded plugin DLL is locked, so with -Restart Jellyfin is stopped before copying.
     if ($Restart) {
-        Invoke-Command $session {
+        Invoke-Command $session { # DevSkim: ignore DS104456 (remoting to the operator's own Jellyfin server is the purpose of this script)
             param($keyFile, $url)
             if (-not (Test-Path $keyFile)) { throw "Deploy API key file not found on the server: $keyFile (Dashboard -> API Keys -> new key 'deploy', save it into this file)" }
             $key = (Get-Content $keyFile -Raw).Trim()
@@ -62,14 +62,14 @@ try {
     }
 
     try {
-        Invoke-Command $session { param($t) New-Item -ItemType Directory -Force $t | Out-Null } -ArgumentList $target
+        Invoke-Command $session { param($t) New-Item -ItemType Directory -Force $t | Out-Null } -ArgumentList $target # DevSkim: ignore DS104456 (see above)
         Copy-Item $dll -Destination $target -ToSession $session -Force
         "Copied $([IO.Path]::GetFileName($dll)) $version -> $target"
     }
     finally {
         # Jellyfin is started again even if the copy failed.
         if ($Restart) {
-            Invoke-Command $session {
+            Invoke-Command $session { # DevSkim: ignore DS104456 (see above)
                 param($keyFile, $target, $pluginsDir, $url, $taskPath, $taskName, $serviceName)
                 # Only the version just deployed should remain.
                 Get-ChildItem $pluginsDir -Directory -Filter 'ApiKeyMiddleware_*' |

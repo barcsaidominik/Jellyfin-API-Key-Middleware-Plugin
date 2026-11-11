@@ -1,0 +1,78 @@
+{
+  "agentPool": "SecurityToolkit",
+  "azureVmImage": "",
+  "devskim": {
+    "ignoreGlobs": [
+      "**/manifest.json",
+      "**/.github/workflows/security-toolkit.yml"
+    ],
+    "ignoreRuleIds": [
+      "DS162092"
+    ]
+  },
+  "dotnetTargets": [
+    "Jellyfin.Plugin.ApiKeyMiddleware.slnx"
+  ],
+  "downloadSemgrepRules": true,
+  "frontendTargets": [],
+  "generatePipeline": true,
+  "githubCodeScanning": false,
+  "githubRunsOn": [
+    "ubuntu-latest"
+  ],
+  "githubSchedule": "",
+  "images": {
+    "gitleaks": "zricethezav/gitleaks:latest",
+    "osv": "ghcr.io/google/osv-scanner:latest",
+    "semgrep": "semgrep/semgrep:latest"
+  },
+  "installHook": true,
+  "installPrerequisites": false,
+  "installVSCodeExtensions": false,
+  "nodeVersion": "",
+  "nodeWingetId": "OpenJS.NodeJS.LTS",
+  "pipelineHistory": true,
+  "pipelineMode": "Report",
+  "pipelineProviders": [
+    "github"
+  ],
+  "pipelineSkipTools": [
+    "sonar"
+  ],
+  "privateNpmRc": "",
+  "privateNuGet": false,
+  "schemaVersion": 1,
+  "sdkChannel": "10.0",
+  "semgrepRulesets": [
+    "p/csharp",
+    "p/typescript"
+  ],
+  "semgrepScope": "repository",
+  "sonar": {
+    "coverage": true,
+    "dotnetTarget": "Jellyfin.Plugin.ApiKeyMiddleware.slnx",
+    "projectKey": "Jellyfin-API-Key-Middleware-Plugin",
+    "testEnvironment": {},
+    "testFilter": "",
+    "url": "http://localhost:9000"
+  },
+  "toolkitRelease": {
+    "baseUrl": "https://github.com/barcsaidominik/SecurityToolkit/releases/download",
+    "version": "0.1.2"
+  },
+  "tools": {
+    "analyzers": true,
+    "devskim": true,
+    "gitleaks": true,
+    "npm": false,
+    "nuget": true,
+    "osv": true,
+    "semgrep": true,
+    "sonar": true
+  },
+  "versions": {
+    "devskim": "",
+    "dotnetCoverage": "",
+    "sonarScanner": ""
+  }
+}

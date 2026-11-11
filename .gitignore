@@ -4,3 +4,15 @@ obj/
 *.user
 artifacts/
 tools/deploy.settings.psd1
+# BEGIN SECURITY-TOOLKIT
+.security/bin/
+.security/npm-tools/
+.security/results/
+.security/backups/
+.security/install-state.json
+.security/pending-actions.md
+.security/security.config.local.json
+.security/security.lock.local.json
+.security/vendor/
+.sonarqube/
+# END SECURITY-TOOLKIT

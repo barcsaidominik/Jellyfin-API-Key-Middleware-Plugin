@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "toolkitRelease": {
+    "baseUrl": "https://github.com/barcsaidominik/SecurityToolkit/releases/download",
+    "sha256": {
+      "linux-arm64": "722d8d7c1bee3457a866cdf3e37023b65c01e7c8b682de385b3b24ef7b4d961f",
+      "linux-x64": "3d0728d8647a2f1f20e3e474d23409808a4b6dc9594c7312373f3b98f5f0bde6",
+      "win-x64": "4fee582131f63e0bdb93e8e6b8a45fa0819547636ece393b20cf032e23460057"
+    },
+    "version": "0.1.2"
+  },
+  "tools": {
+    "devskim": {
+      "enabled": true,
+      "package": "Microsoft.CST.DevSkim.CLI",
+      "ready": true,
+      "version": "1.0.100"
+    },
+    "dotnetCoverage": {
+      "enabled": true,
+      "package": "dotnet-coverage",
+      "ready": true,
+      "version": "18.12.0"
+    },
+    "gitleaks": {
+      "enabled": true,
+      "image": "zricethezav/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f",
+      "ready": true,
+      "sourceImage": "zricethezav/gitleaks:latest"
+    },
+    "osv": {
+      "enabled": true,
+      "image": "ghcr.io/google/osv-scanner@sha256:a70ffffc2bfd33482953e5d6b64c6fcdb30239717a07b0f0d3ab2859ce3e4cde",
+      "ready": true,
+      "sourceImage": "ghcr.io/google/osv-scanner:latest"
+    },
+    "semgrep": {
+      "enabled": true,
+      "image": "semgrep/semgrep@sha256:cc1b68266f267878b39739373ea9985b9a78e5d64497dd875c8de100b22695ed",
+      "ready": true,
+      "sourceImage": "semgrep/semgrep:latest"
+    },
+    "sonarScanner": {
+      "enabled": true,
+      "package": "dotnet-sonarscanner",
+      "ready": true,
+      "version": "12.1.0"
+    }
+  }
+}

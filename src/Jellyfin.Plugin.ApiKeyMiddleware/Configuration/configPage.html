@@ -169,17 +169,17 @@
                 <div id="AkmBuilder">
                     <div class="akm-toolbar">
                         <div class="selectContainer">
-                            <select is="emby-select" id="AkmKey" label="API key"></select>
+                            <select is="emby-select" id="AkmKey" label="API key" aria-label="API key"></select>
                         </div>
                         <div class="selectContainer">
-                            <select is="emby-select" id="AkmMode" label="Mode">
+                            <select is="emby-select" id="AkmMode" label="Mode" aria-label="Mode">
                                 <option value="enforce">enforce: only the selected endpoints</option>
                                 <option value="audit">audit: allow and record everything</option>
                                 <option value="allow">allow: no checks</option>
                             </select>
                         </div>
                         <div class="inputContainer">
-                            <input is="emby-input" type="search" id="AkmSearch" label="Search (path, description, group)" autocomplete="off">
+                            <input is="emby-input" type="search" id="AkmSearch" label="Search (path, description, group)" aria-label="Search (path, description, group)" autocomplete="off">
                         </div>
                     </div>
                     <div class="akm-filters">

@@ -1,0 +1,3 @@
+<Project>
+  <Import Label="SecurityToolkit" Project="$(MSBuildThisFileDirectory).security/SecurityToolkit.props" Condition="'$(SecurityToolkitEnabled)' == 'true' and Exists('$(MSBuildThisFileDirectory).security/SecurityToolkit.props')" />
+</Project>

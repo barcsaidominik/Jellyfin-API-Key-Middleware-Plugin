@@ -33,7 +33,7 @@ if (@($plugin.versions | Where-Object version -eq $version).Count -gt 0) {
 New-Item -ItemType Directory -Force $artifacts | Out-Null
 if (Test-Path $zip) { Remove-Item $zip }
 Compress-Archive -Path $dll -DestinationPath $zip
-$checksum = (Get-FileHash $zip -Algorithm MD5).Hash.ToLowerInvariant()
+$checksum = (Get-FileHash $zip -Algorithm MD5).Hash.ToLowerInvariant() # DevSkim: ignore DS126858 (Jellyfin's plugin manifest format requires an MD5 checksum)
 
 $entry = [ordered]@{
     version   = $version

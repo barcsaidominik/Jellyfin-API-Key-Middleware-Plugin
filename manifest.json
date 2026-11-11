@@ -8,6 +8,14 @@
     "category": "General",
     "versions": [
       {
+        "version": "12.4.0.2",
+        "changelog": "Enforce mode: a WebSocket upgrade is only allowed on /socket with a GET /socket rule (Jellyfin accepted upgrades on any path, so any allowed GET rule could open a WebSocket). Rule builder: rules whose * also matches admin-only endpoints are marked and warned about. Docs: security boundary, fail-open table, updated limitations.",
+        "targetAbi": "12.4.0.0",
+        "sourceUrl": "https://github.com/barcsaidominik/Jellyfin-API-Key-Middleware-Plugin/releases/download/v12.4.0.2/api-key-middleware_12.4.0.2.zip",
+        "checksum": "82582b8520cf5b265d9707e52bfc0c18",
+        "timestamp": "2026-11-11T19:49:20Z"
+      },
+      {
         "version": "12.4.0.1",
         "changelog": "If Jellyfin resets the plugin configuration to the factory default because it cannot read it, the last saved rules are restored from a backup file next to the configuration (logged as a Warning). Docs: unreadable-configuration limitation, observed-list cap. CI actions pinned to commit SHAs.",
         "targetAbi": "12.4.0.0",

@@ -6,8 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <AssemblyVersion>12.4.0.1</AssemblyVersion>
-    <FileVersion>12.4.0.1</FileVersion>
+    <AssemblyVersion>12.4.0.2</AssemblyVersion>
+    <FileVersion>12.4.0.2</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
